@@ -1,0 +1,76 @@
+name: Apply CutCalc PRO theme
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  theme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply production UI theme
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8')
+
+          if 'data-cutcalc-pro="1"' in html:
+              print('PRO theme already applied; nothing to do.')
+              raise SystemExit(0)
+
+          css = r'''<style>
+          :root{--bg:#090d12;--bg2:#0d131a;--card:#141a21;--card2:#1b232d;--text:#f4f7fb;--muted:#8f9aaa;--line:#2b3744;--accent:#f27545;--accent2:#ff946b;--success:#4ade80;--danger:#ff6b6b;--shadow:0 14px 35px rgba(0,0,0,.22)}
+          *{box-sizing:border-box}html{background:var(--bg)}
+          body{margin:0;background:radial-gradient(circle at 15% 0%,rgba(242,117,69,.08),transparent 28%),linear-gradient(180deg,var(--bg2),var(--bg));color:var(--text);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh}
+          body:before{content:"";display:block;height:3px;background:linear-gradient(90deg,var(--accent),#ffb08d 50%,var(--accent))}
+          header{max-width:1250px;margin:auto;padding:22px 18px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line)}
+          .brand{display:flex;align-items:center;gap:13px}.brand-icon{width:46px;height:46px;border-radius:13px;background:linear-gradient(145deg,#202b37,#10161d);border:1px solid #394654;display:grid;place-items:center;font-weight:900;color:var(--accent2);letter-spacing:-1px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+          h1{margin:0;font-size:25px;letter-spacing:-.5px}header p{margin:3px 0 0;color:var(--muted);font-size:13px}.header-tag{font-size:11px;font-weight:800;letter-spacing:1.2px;color:#c9d1dc;border:1px solid var(--line);border-radius:999px;padding:7px 10px;background:#111820}
+          nav{max-width:1250px;margin:auto;display:flex;gap:8px;padding:14px 18px 4px;overflow:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+          nav button,.btn{border:1px solid var(--line);background:#1a232d;color:var(--text);padding:11px 15px;border-radius:11px;font-weight:650;cursor:pointer;transition:.18s ease;white-space:nowrap}nav button:hover,.btn:hover{border-color:#465462;background:#202b36;transform:translateY(-1px)}nav button.active,.btn.primary{background:var(--accent);color:#16110e;border-color:var(--accent);font-weight:850;box-shadow:0 7px 18px rgba(242,117,69,.18)}nav button.active:hover,.btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+          main{max-width:1250px;margin:auto;padding:14px 18px 50px}.view{display:none}.view.active{display:block}.grid{display:grid;grid-template-columns:minmax(0,1.16fr) minmax(320px,.84fr);gap:18px}.card{background:linear-gradient(180deg,rgba(255,255,255,.018),transparent),var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:18px;box-shadow:var(--shadow)}
+          h2{margin:0;font-size:20px;letter-spacing:-.25px}h3{margin:0;font-size:16px}.section{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}.section>div:first-child{min-width:0}.hint,.small{color:var(--muted);font-size:12px;line-height:1.55}.eyebrow{font-size:10px;font-weight:850;letter-spacing:1.3px;color:var(--accent2);margin-bottom:4px}.status{font-size:11px;color:#aeb9c6;border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:#10171e}
+          .fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}label{display:block;color:#aab5c3;font-size:12px;font-weight:650;margin-bottom:6px;letter-spacing:.1px}input,select{width:100%;background:#0d141b;color:var(--text);border:1px solid #33404d;border-radius:11px;padding:12px 12px;outline:none;font:inherit;transition:.18s}input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(242,117,69,.1)}
+          .calc-tools{background:linear-gradient(180deg,#19222c,#151d25);border:1px solid #2d3946;border-radius:15px;padding:15px;margin-top:17px}.op{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(150px,.7fr) auto;gap:9px;margin:10px 0}.op .btn{padding:10px 12px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.actions .btn{min-height:43px}
+          .result-card{position:relative;overflow:hidden}.result-card:after{content:"";position:absolute;right:-80px;top:-100px;width:210px;height:210px;border-radius:50%;background:rgba(242,117,69,.055);pointer-events:none}.result{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:var(--card2);border:1px solid #2a3642;padding:13px 14px;border-radius:13px;color:#aeb8c5;font-size:12px}.metric b{color:var(--text);font-size:25px;display:block;margin-top:5px;letter-spacing:-.5px}.metric:last-child{border-color:rgba(242,117,69,.45);background:linear-gradient(180deg,rgba(242,117,69,.13),rgba(242,117,69,.05))}.metric:last-child b{color:var(--accent2);font-size:30px}.result-card #note{margin-top:12px}.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;background:#49361c;color:#ffd28a;border:1px solid #6b512b}.badge.ok{background:#123b27;color:#b9f5d0;border-color:#24613f}.result-card #formula{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+          table{width:100%;border-collapse:collapse;min-width:1050px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:#8793a3;font-size:11px;text-transform:uppercase;letter-spacing:.5px}td{color:#dce3eb}.scroll{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:13px}.scroll table{border:0}.scroll tr:last-child td{border-bottom:0}a{color:#ffab8b;text-decoration:none}a:hover{text-decoration:underline}
+          #library{margin-top:4px}.lib-search{margin-top:3px}.backup-note{max-width:700px}
+          @media(max-width:800px){header{padding:18px 14px}.header-tag{display:none}nav{padding:12px 14px 3px}main{padding:12px 14px 40px}.grid,.fields{grid-template-columns:1fr}.card{padding:15px;border-radius:16px}.op{grid-template-columns:1fr}.op .btn{width:100%}.actions{display:grid;grid-template-columns:1fr}.actions .btn{width:100%}.result{grid-template-columns:1fr 1fr}.metric b{font-size:22px}.metric:last-child b{font-size:26px}.section{align-items:flex-start}.status{display:none}}
+          @media(max-width:430px){h1{font-size:22px}.brand-icon{width:42px;height:42px}.result{grid-template-columns:1fr}.metric:last-child{grid-column:auto}nav button{padding:10px 12px}}
+          </style>'''
+
+          html = re.sub(r'<style>.*?</style>', css, html, count=1, flags=re.S)
+          html = html.replace('<body>', '<body data-cutcalc-pro="1">', 1)
+          html = html.replace('<header><h1>CutCalc</h1><p>Калькулятор закупки режущего инструмента</p></header>', '<header><div class="brand"><div class="brand-icon">CC</div><div><h1>CutCalc</h1><p>Калькулятор закупки режущего инструмента</p></div></div><div class="header-tag">PRO · CNC</div></header>')
+          html = html.replace('<div class="card"><div class="section"><h2>Расчёт закупки</h2><span class="small">деталей / ресурс</span></div>', '<div class="card"><div class="section"><div><div class="eyebrow">РАСЧЁТ ЗАКУПКИ</div><h2>Данные детали</h2></div><span class="status">Деталей / кромку</span></div>')
+          html = html.replace('<div class="card" style="background:var(--card2);margin-top:16px">', '<div class="calc-tools">')
+          html = html.replace('<button class="btn primary" id="calcBtn">Рассчитать</button> <button class="btn" id="saveBtn">Сохранить</button> <button class="btn" id="copyBtn">Скопировать заявку</button>', '<div class="actions"><button class="btn primary" id="calcBtn">Рассчитать закупку</button><button class="btn" id="saveBtn">Сохранить расчёт</button><button class="btn" id="copyBtn">Скопировать заявку</button></div>')
+          html = html.replace('<div class="card"><h2>Результат</h2><div id="res" class="result">', '<div class="card result-card"><div class="section"><div><div class="eyebrow">РЕЗУЛЬТАТ РАСЧЁТА</div><h2>К закупке</h2></div><span class="status">Готово</span></div><div id="res" class="result">')
+          html = html.replace('<div class="card"><div class="section"><div><h2>Библиотека инструментов</h2>', '<div class="card"><div class="section"><div><div class="eyebrow">СПРАВОЧНИК</div><h2>Библиотека инструментов</h2>')
+          html = html.replace('<input id="search" placeholder="Поиск...">', '<input id="search" class="lib-search" placeholder="Поиск артикула, инструмента или материала...">')
+          html = html.replace('<div class="hint" style="margin-bottom:14px">Сохрани резервную копию библиотеки инструментов и истории в файл. Её можно загрузить обратно после очистки данных или на другом устройстве.</div>', '<div class="hint backup-note" style="margin-bottom:14px">Сохрани резервную копию библиотеки инструментов и истории в файл. Её можно загрузить обратно после очистки данных или на другом устройстве.</div>')
+
+          p.write_text(html, encoding='utf-8')
+          print('CutCalc PRO theme applied.')
+
+      - name: Commit theme changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "style: apply CutCalc production PRO UI"
+          git push
