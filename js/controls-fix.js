@@ -10,7 +10,7 @@
       addOperation.dataset.controlsBound = '1';
       addOperation.addEventListener('click', (event) => {
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         window.addOperation({});
       });
     }
@@ -20,11 +20,12 @@
       operations.addEventListener('click', (event) => {
         const button = event.target.closest('.add-pass');
         if (!button) return;
-        event.preventDefault();
-        event.stopPropagation();
         const operation = button.closest('.operation');
-        if (operation) window.addPass(operation, {});
-      });
+        if (!operation) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.addPass(operation, {});
+      }, true);
     }
   }
 
